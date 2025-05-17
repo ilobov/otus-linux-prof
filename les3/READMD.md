@@ -12,7 +12,7 @@
 
 Перехожу в root: sudo -i
 
-# lsblk
+lsblk
 
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 fd0                         2:0    1    4K  0 disk 
@@ -31,28 +31,28 @@ sr0                        11:0    1 1024M  0 rom
 
 Создаю Physical Volume
 
-# pvcreate /dev/sdb
+pvcreate /dev/sdb
 
 Проверю что создался
 
-# vgs
+vgs
   VG        #PV #LV #SN Attr   VSize  VFree
   ubuntu-vg   1   1   0 wz--n- 18.22g 8.22g
 
 Создаю новую Volume Group
 
-# vgcreate test-vg /dev/sdb
+vgcreate test-vg /dev/sdb
 
-# vgs
+vgs
   VG        #PV #LV #SN Attr   VSize   VFree  
   test-vg     1   0   0 wz--n- <10.00g <10.00g
   ubuntu-vg   1   1   0 wz--n-  18.22g   8.22g
   
 Создаю Logical Volume
 
-# lvcreate -l+10%FREE -n test-lv test-vg
+lvcreate -l+10%FREE -n test-lv test-vg
 
-# lvs
+lvs
   LV        VG        Attr       LSize    Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   test-lv   test-vg   -wi-a----- 1020.00m                                                    
   ubuntu-lv ubuntu-vg -wi-ao----   10.00g
@@ -61,17 +61,17 @@ sr0                        11:0    1 1024M  0 rom
 
 Создаю файловую систему
 
-# mkfs.ext4 /dev/test-vg/test-lv  
+mkfs.ext4 /dev/test-vg/test-lv  
 
 Создаю папку для монтирования
 
-# mkdir -p /mnt/test-lv
+mkdir -p /mnt/test-lv
 
 Прописываю монтирование в /etc/fstab
 
 /dev/test-vg/test-lv /mnt/test-lv ext4 defaults 0 1
 
-# df -h
+ df -h
 Filesystem                         Size  Used Avail Use% Mounted on
 tmpfs                              186M  1.1M  185M   1% /run
 /dev/mapper/ubuntu--vg-ubuntu--lv  9.8G  6.2G  3.1G  67% /
@@ -85,7 +85,7 @@ tmpfs                              186M   12K  186M   1% /run/user/1000
 
 Расширяю том и обновляю файловую систему
 
-# vgs
+ vgs
   VG        #PV #LV #SN Attr   VSize   VFree
   test-vg     1   1   0 wz--n- <10.00g 9.00g
   ubuntu-vg   1   1   0 wz--n-  18.22g 8.22g
@@ -94,7 +94,7 @@ tmpfs                              186M   12K  186M   1% /run/user/1000
 
 1.6 Проверить корректность работы
 
-# df -h
+ df -h
 Filesystem                         Size  Used Avail Use% Mounted on
 tmpfs                              186M  1.1M  185M   1% /run
 /dev/mapper/ubuntu--vg-ubuntu--lv  9.8G  6.2G  3.1G  67% /
@@ -104,7 +104,7 @@ tmpfs                              5.0M     0  5.0M   0% /run/lock
 tmpfs                              186M   12K  186M   1% /run/user/1000
 /dev/mapper/test--vg-test--lv      2.0G   24K  1.9G   1% /mnt/test-lv
 
-# vgs
+ vgs
   VG        #PV #LV #SN Attr   VSize   VFree
   test-vg     1   1   0 wz--n- <10.00g 8.00g
   ubuntu-vg   1   1   0 wz--n-  18.22g 8.22g
