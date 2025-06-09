@@ -102,12 +102,6 @@ root@ubuntu1:~# apt install spawn-fcgi php php-cgi php-cli apache2 libapache2-mo
 * Cоздаю файл с настройками для будущего сервиса в файле /etc/spawn-fcgi/fcgi.conf
 
 root@ubuntu1:/etc/spawn-fcgi# cat fcgi.conf
-# You must set some working options before the "spawn-fcgi" service will work.
-# If SOCKET points to a file, then this file is cleaned up by the init script.
-#
-# See spawn-fcgi(1) for all possible options.
-#
-# Example :
 SOCKET=/var/run/php-fcgi.sock
 OPTIONS="-u www-data -g www-data -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
 
@@ -186,18 +180,6 @@ root@ubuntu1:/etc/spawn-fcgi# apt install nginx -y
 * Для запуска нескольких экземпляров сервиса модифицируем исходный service для использования различной конфигурации, а также PID-файлов. Для этого создадим новый Unit для работы с шаблонами (/etc/systemd/system/nginx@.service):
 
 root@ubuntu1:/etc/spawn-fcgi# cat /etc/systemd/system/nginx@.service
-# Stop dance for nginx
-# =======================
-#
-# ExecStop sends SIGSTOP (graceful stop) to the nginx process.
-# If, after 5s (--retry QUIT/5) nginx is still running, systemd takes control
-# and sends SIGTERM (fast shutdown) to the main process.
-# After another 5s (TimeoutStopSec=5), and if nginx is alive, systemd sends
-# SIGKILL to all the remaining processes in the process group (KillMode=mixed).
-#
-# nginx signals reference doc:
-# http://nginx.org/en/docs/control.html
-#
 [Unit]
 Description=A high performance web server and a reverse proxy server
 Documentation=man:nginx(8)
