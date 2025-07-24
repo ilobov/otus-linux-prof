@@ -40,10 +40,10 @@ root@Home:~/otus/my/les18# cat Vagrantfile
 \# -*- mode: ruby -*-
 \# vi: set ft=ruby :
 
-# Описываем Виртуальные машины  
+\# Описываем Виртуальные машины  
 
 MACHINES = {  
-  # Указываем имя ВМ "kernel update"  
+  \# Указываем имя ВМ "kernel update"  
   :"kernel-update" => {  
               #Какой vm box будем использовать  
               :box_name => "generic/centos8s",  
