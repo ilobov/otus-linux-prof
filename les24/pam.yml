@@ -1,0 +1,55 @@
+- name: PAM
+  hosts: all
+  become: true
+  vars:
+    otus_password: "{{ 'Otus2022!' | password_hash('sha512') }}"
+
+  tasks:
+  - name: Ensure the 'admin' group exists
+    ansible.builtin.group:
+      name: admin
+      state: present
+
+  - name: Create user 'otus' 
+    ansible.builtin.user:
+      name: otus
+      password: "{{ otus_password }}"
+      state: present
+      createhome: yes
+      shell: /bin/bash
+
+  - name: Create user 'otusadm' 
+    ansible.builtin.user:
+      name: otusadm
+      password: "{{ otus_password }}"
+      state: present
+      groups:
+        - admin
+      append: yes 
+      createhome: yes
+      shell: /bin/bash      
+
+  - name: Add user 'root' to 'admin' group
+    ansible.builtin.user:
+      name: root
+      groups: admin
+      append: yes      
+
+  - name: Add user 'vagrant' to 'admin' group
+    ansible.builtin.user:
+      name: vagrant
+      groups: admin
+      append: yes            
+
+  - name: Copy a file login.sh to the remote host
+    ansible.builtin.copy:
+      src: ./templates/login.sh
+      dest: /usr/local/bin/login.sh
+      mode: '0755'
+
+  - name: Add line to /etc/pam.d/sshd 
+    ansible.builtin.lineinfile:
+      path: /etc/pam.d/sshd
+      line: "auth required pam_exec.so debug /usr/local/bin/login.sh"
+      state: present
+      create: true      
