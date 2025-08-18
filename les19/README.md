@@ -11,6 +11,7 @@
 $ curl -fsSL https://get.docker.com -o get-docker.sh  
 $ sudo sh ./get-docker.sh --dry-run  
 
+```
 # Executing docker install script, commit: bedc5d6b3e782a5e50d3d2a870f5e1f1b5a38d5c  
 apt-get -qq update >/dev/null  
 DEBIAN_FRONTEND=noninteractive apt-get -y -qq install ca-certificates curl >/dev/null  
@@ -20,6 +21,7 @@ chmod a+r /etc/apt/keyrings/docker.asc
 echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list  
 apt-get -qq update >/dev/null  
 DEBIAN_FRONTEND=noninteractive apt-get -y -qq install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-ce-rootless-extras docker-buildx-plugin docker-model-plugin >/dev/null  
+```
 
 Перехожу в root: sudo -i
 Запускаю полученный набор команд
