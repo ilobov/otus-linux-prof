@@ -23,18 +23,18 @@ apt-get -qq update >/dev/null
 DEBIAN_FRONTEND=noninteractive apt-get -y -qq install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-ce-rootless-extras docker-buildx-plugin docker-model-plugin >/dev/null  
 ```
 
-Перехожу в root: sudo -i
-Запускаю полученный набор команд
+Перехожу в root: sudo -i  
+Запускаю полученный набор команд  
 
-После установки запускаю сервис и проверяю версию докера:
-service docker start
-root@liv-HP:~# docker -v
-Docker version 28.3.3, build 980b856
+После установки запускаю сервис и проверяю версию докера:  
+service docker start  
+root@liv-HP:~# docker -v  
+Docker version 28.3.3, build 980b856  
 
 #### 2. Docker compose установлен вместе с docker
 
-root@liv-HP:~# docker compose version
-Docker Compose version v2.39.1
+root@liv-HP:~# docker compose version  
+Docker Compose version v2.39.1  
 
 #### 3. Создаю кастомный образ nginx на базе alpine. 
 
