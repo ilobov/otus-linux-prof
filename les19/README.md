@@ -6,7 +6,7 @@
 
 ### Этапы выполнения
 
-####1. Установка Docker
+#### 1. Установка Docker
 
 $ curl -fsSL https://get.docker.com -o get-docker.sh  
 $ sudo sh ./get-docker.sh --dry-run  
@@ -31,12 +31,12 @@ service docker start
 root@liv-HP:~# docker -v
 Docker version 28.3.3, build 980b856
 
-####2. Docker compose установлен вместе с docker
+#### 2. Docker compose установлен вместе с docker
 
 root@liv-HP:~# docker compose version
 Docker Compose version v2.39.1
 
-####3. Создаю кастомный образ nginx на базе alpine. 
+#### 3. Создаю кастомный образ nginx на базе alpine. 
 
 * Создаю Dockerfile  
 FROM alpine:latest  
@@ -72,11 +72,11 @@ sudo docker login -u "ilobov" -p "********" docker.io
 
 sudo docker push ilobov/otus:1.1
 
-####4. Определите разницу между контейнером и образом
+#### 4. Определите разницу между контейнером и образом
 
 Образ - это шаблон для создания контейнеров. Контейнер - это динамический экземпляр образа, который запущен и работает в изолированной среде.
 
-####5. Ответьте на вопрос: Можно ли в контейнере собрать ядро?
+#### 5. Ответьте на вопрос: Можно ли в контейнере собрать ядро?
 
 Нельзя. Контейнеры используют ядро хостовой машины.
 
