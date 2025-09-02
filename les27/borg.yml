@@ -18,6 +18,7 @@
   - name: Create user borg
     ansible.builtin.user:
       name: borg
+      shell: /bin/bash
   - name: Change file ownership, group and permissions
     ansible.builtin.file:
       path: /var/backup
@@ -42,8 +43,7 @@
 
 - name: Client
   hosts: client
-  become: yes  # Use become for privilege escalation if needed to manage users
-
+  become: yes  
   tasks:
     - name: Create or update user and generate SSH key
       ansible.builtin.user:
@@ -51,47 +51,49 @@
         generate_ssh_key: yes
     - name: Read authorized_keys file
       ansible.builtin.slurp:
-        src: /root/.ssh/id_rsa.pub # Adjust path and user as needed
+        src: /root/.ssh/id_rsa.pub 
       register: authorized_keys_content
 
-    - name: Print the public key
-      ansible.builtin.debug:
-        msg: "{{ authorized_keys_content['content'] | b64decode }}"        
-
+    - name: Add host fingerprint to known_hosts
+      ansible.builtin.known_hosts:
+        host: 192.168.56.160
+        key: "{{ lookup('pipe', 'ssh-keyscan -H 192.168.56.160') }}"
+        state: present
+        path: ~/.ssh/known_hosts
 
 - name: Backup
   hosts: backup
   become: true
   tasks:
-  - name: Set authorized key
-    ansible.builtin.user:
+  - name: Set authorized key to user borg
+    ansible.posix.authorized_key:
       user: borg
       state: present
-      key: "{{ authorized_keys_content['content'] | b64decode }}"
+      key: "{{ hostvars['client']['authorized_keys_content']['content'] | b64decode }}"
+  - name: Check if file exists
+    ansible.builtin.stat:
+      path: /var/backup/client/config
+    register: backup_config
 
-    # - name: Borg init
-    #   ansible.builtin.shell: "borg init --encryption=repokey borg@192.168.56.160:/var/backup/"
-    # notify:
-    #   - restart nginx
-
-  # - name: NGINX | Create NGINX config file from template
-  #   template:
-  #     src: templates/nginx.conf.j2
-  #     dest: /etc/nginx/nginx.conf
-  #   notify:
-  #     - reload nginx
-  #   tags:
-  #     - nginx-configuration
-
-  # handlers:
-  #   - name: restart nginx
-  #     systemd:
-  #       name: nginx
-  #       state: restarted
-  #       enabled: yes
-    
-  #   - name: reload nginx
-  #     systemd:
-  #       name: nginx
-  #       state: reloaded
-
+- name: Client
+  hosts: client
+  become: yes
+  tasks:
+  - name: Initialize Borg repository
+    ansible.builtin.shell: borg init --encryption=repokey borg@192.168.56.160:/var/backup/client
+    environment:
+      BORG_PASSPHRASE: "Test1234"
+    when: not hostvars['backup'].backup_config.stat.exists  
+  - name: Copy files service and timer
+    ansible.builtin.copy:
+      src: templates/
+      dest: /etc/systemd/system/
+      owner: root
+      group: root
+      mode: '0755'
+  - name: Enable a timer unit for borg-backup.timer
+    ansible.builtin.systemd_service:
+      name: borg-backup.timer
+      state: started
+      enabled: true      
+      
