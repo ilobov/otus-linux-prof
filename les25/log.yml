@@ -1,0 +1,100 @@
+# - name: Apt update
+#   hosts: all
+#   gather_facts: false
+#   become: true
+#   tasks:
+#   - name: update
+#     apt: 
+#       update_cache=yes
+
+
+- name: Log
+  hosts: log
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Ensure rsyslog is installed
+    ansible.builtin.apt:
+      name: rsyslog
+      state: present
+      # update_cache: yes
+
+  - name: Enable UDP input for rsyslog
+    lineinfile:
+      path: /etc/rsyslog.conf
+      regexp: '^#module\(load="imudp"\)'
+      line: 'module(load="imudp")'
+      state: present
+    notify: Restart rsyslog
+
+  - name: Configure UDP input listener
+    lineinfile:
+      path: /etc/rsyslog.conf
+      regexp: '^#input\(type="imudp" port="514"\)'
+      line: 'input(type="imudp" port="514")'
+      state: present
+    notify: Restart rsyslog      
+
+  - name: Enable TCP input for rsyslog
+    lineinfile:
+      path: /etc/rsyslog.conf
+      regexp: '^#module\(load="imtcp"\)'
+      line: 'module(load="imtcp")'
+      state: present
+    notify: Restart rsyslog
+
+  - name: Configure TCP input listener
+    lineinfile:
+      path: /etc/rsyslog.conf
+      regexp: '^#input\(type="imtcp" port="514"\)'
+      line: 'input(type="imtcp" port="514")'
+      state: present
+    notify: Restart rsyslog
+
+  - name: Add multiple lines to a file
+    ansible.builtin.lineinfile:
+      path: /etc/rsyslog.conf
+      line: "{{ item }}"
+      state: present
+    with_items:
+      - '$template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"'
+      - "*.* ?RemoteLogs"  
+      - "& ~"
+    notify: Restart rsyslog
+
+  handlers:
+  - name: Restart rsyslog
+    ansible.builtin.service:
+      name: rsyslog
+      state: restarted      
+
+- name: Web
+  hosts: web
+  gather_facts: false
+  become: true
+  tasks:
+  - name: NGINX | Install NGINX
+    apt:
+      name: nginx
+      state: latest
+
+  - name: Configure nginx access log path
+    lineinfile:
+      path: /etc/nginx/nginx.conf
+      search_string: 'access_log /var/log/nginx/access.log;'
+      line: 'access_log syslog:server=192.168.56.15:514,tag=nginx_access,severity=info combined;'
+      state: present
+    notify: Restart nginx
+
+  - name: Configure nginx access log path
+    lineinfile:
+      path: /etc/nginx/nginx.conf
+      insertbefore: 'error_log /var/log/nginx/error.log;'
+      line: 'error_log  syslog:server=192.168.56.15:514,tag=nginx_error;'
+    notify: Restart nginx
+
+  handlers:
+  - name: Restart nginx
+    ansible.builtin.service:
+      name: nginx
+      state: restarted      
