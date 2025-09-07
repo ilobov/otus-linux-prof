@@ -1,11 +1,11 @@
-# - name: Apt update
-#   hosts: all
-#   gather_facts: false
-#   become: true
-#   tasks:
-#   - name: update
-#     apt: 
-#       update_cache=yes
+- name: Apt update
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+  - name: update
+    apt: 
+      update_cache=yes
 
 
 - name: Log
@@ -51,7 +51,7 @@
       state: present
     notify: Restart rsyslog
 
-  - name: Add multiple lines to a file
+  - name: Configure rsyslog.conf
     ansible.builtin.lineinfile:
       path: /etc/rsyslog.conf
       line: "{{ item }}"
@@ -70,7 +70,7 @@
 
 - name: Web
   hosts: web
-  gather_facts: false
+#  gather_facts: false
   become: true
   tasks:
   - name: NGINX | Install NGINX
@@ -86,15 +86,81 @@
       state: present
     notify: Restart nginx
 
-  - name: Configure nginx access log path
+  - name: Configure nginx error log path
     lineinfile:
       path: /etc/nginx/nginx.conf
       insertbefore: 'error_log /var/log/nginx/error.log;'
       line: 'error_log  syslog:server=192.168.56.15:514,tag=nginx_error;'
     notify: Restart nginx
 
+  - name: Install auditd package
+    ansible.builtin.apt:
+      name: auditd
+      state: present
+      update_cache: yes
+
+  - name: Install audispd-plugins
+    ansible.builtin.apt:
+      name: audispd-plugins
+      state: present
+      update_cache: yes
+
+  - name: Ensure auditd service is running and enabled at boot
+    ansible.builtin.service:
+      name: auditd
+      state: started
+      enabled: yes
+
+  - name: Add a line to the end of a file
+    ansible.builtin.lineinfile:
+      path: /etc/audit/rules.d/audit.rules
+      line: "-w /etc/nginx/nginx.conf -p wa" 
+      insertafter: EOF
+      create: true    
+    notify: Restart auditd
+
+  - name: Add a line to the end of a file
+    ansible.builtin.lineinfile:
+      path: /etc/audit/rules.d/audit.rules
+      line: "-w /etc/nginx/nginx.conf -p wa" 
+      insertafter: EOF
+      create: true    
+    notify: Restart auditd
+
+  - name: Configure audit syslog active
+    lineinfile:
+      path: /etc/audit/plugins.d/syslog.conf
+      search_string: 'active = no'
+      line: 'active = yes'
+      state: present
+    notify: Restart auditd
+
+  - name: Configure audit syslog args
+    lineinfile:
+      path: /etc/audit/plugins.d/syslog.conf
+      search_string: 'args = LOG_INFO'
+      line: 'args = LOG_INFO LOG_LOCAL6'
+      state: present
+    notify: Restart auditd
+
+  - name: Copy 60-auditd.conf
+    ansible.builtin.copy:
+      src: 60-auditd.conf
+      dest: /etc/rsyslog.d/60-auditd.conf
+    notify: Restart rsyslog
+
   handlers:
   - name: Restart nginx
     ansible.builtin.service:
       name: nginx
+      state: restarted      
+
+  - name: Restart auditd
+    ansible.builtin.service:
+      name: auditd
+      state: restarted      
+
+  - name: Restart rsyslog
+    ansible.builtin.service:
+      name: rsyslog
       state: restarted      
