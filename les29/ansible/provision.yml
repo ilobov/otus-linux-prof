@@ -1,0 +1,91 @@
+- name: Apt update
+  hosts: pxeserver
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Stop and disable ufw
+    ansible.builtin.service:
+      name: ufw
+      state: stopped
+      enabled: no
+
+  - name: Install dnsmasq package
+    apt:
+      name: dnsmasq
+      state: present
+      update_cache: yes
+
+  - name: Copy pxe.conf
+    ansible.builtin.copy:
+      src: pxe.conf
+      dest: /etc/dnsmasq.d/pxe.conf
+
+  - name: Create directory /srv/tftp
+    ansible.builtin.file:
+      path: /srv/tftp
+      state: directory
+      recurse: yes 
+
+  - name: Download netboot
+    ansible.builtin.get_url:
+      url: "https://releases.ubuntu.com/noble/ubuntu-24.04.3-netboot-amd64.tar.gz"
+      dest: /tmp/ubuntu-24.04.3-netboot-amd64.tar.gz
+      mode: '0644'
+
+  - name: Extract netboot
+    ansible.builtin.unarchive:
+      src: "/tmp/ubuntu-24.04.3-netboot-amd64.tar.gz" 
+      dest: "/srv/tftp"
+      remote_src: yes
+    notify: Restart dnsmasq  
+
+  - name: Install apache2
+    apt:
+      name: apache2
+      state: present
+      update_cache: yes
+
+  - name: Create directory /srv/images
+    ansible.builtin.file:
+      path: /srv/images
+      state: directory
+      recurse: yes 
+
+  - name: Check if file exists
+    ansible.builtin.stat:
+      path: /srv/images/ubuntu-24.04.3-live-server-amd64.iso
+    register: file_status
+
+  - name: Download iso file
+    ansible.builtin.get_url:
+      url: "https://releases.ubuntu.com/noble/ubuntu-24.04.3-live-server-amd64.iso"
+      dest: /srv/images/ubuntu-24.04.3-live-server-amd64.iso
+      mode: '0644'
+    when: not file_status.stat.exists
+
+  - name: Copy ks-server.conf
+    ansible.builtin.copy:
+      src: ks-server.conf
+      dest: /etc/apache2/sites-available/ks-server.conf
+
+  - name: Activate config ks-server
+    ansible.builtin.shell: a2ensite ks-server.conf
+
+  - name: Configure pxelinux.cfg/default
+    lineinfile:
+      path: /srv/tftp/amd64/pxelinux.cfg/default
+      regexp: '^.*APPEND.*$'
+      line: 'APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall'
+      state: present
+    notify: Restart apache2
+  
+  handlers:
+  - name: Restart dnsmasq
+    ansible.builtin.service:
+      name: dnsmasq
+      state: restarted      
+
+  - name: Restart apache2
+    ansible.builtin.service:
+      name: apache2
+      state: restarted      
