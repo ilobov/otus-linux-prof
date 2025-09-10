@@ -26,18 +26,25 @@
       state: directory
       recurse: yes 
 
+  - name: Check if file pxelinux.0 exists
+    ansible.builtin.stat:
+      path: "/srv/tftp/amd64/pxelinux.0"
+    register: pxelinux_status
+      
+
   - name: Download netboot
     ansible.builtin.get_url:
       url: "https://releases.ubuntu.com/noble/ubuntu-24.04.3-netboot-amd64.tar.gz"
       dest: /tmp/ubuntu-24.04.3-netboot-amd64.tar.gz
       mode: '0644'
+    when: not pxelinux_status.stat.exists
 
   - name: Extract netboot
     ansible.builtin.unarchive:
       src: "/tmp/ubuntu-24.04.3-netboot-amd64.tar.gz" 
       dest: "/srv/tftp"
       remote_src: yes
-    notify: Restart dnsmasq  
+    when: not pxelinux_status.stat.exists
 
   - name: Install apache2
     apt:
@@ -51,7 +58,7 @@
       state: directory
       recurse: yes 
 
-  - name: Check if file exists
+  - name: Check if ISO file exists
     ansible.builtin.stat:
       path: /srv/images/ubuntu-24.04.3-live-server-amd64.iso
     register: file_status
@@ -75,10 +82,28 @@
     lineinfile:
       path: /srv/tftp/amd64/pxelinux.cfg/default
       regexp: '^.*APPEND.*$'
-      line: 'APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall'
+      line: 'APPEND root=/dev/ram0 ramdisk_size=4000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/ubuntu-24.04.3-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.20/srv/ks/'
       state: present
-    notify: Restart apache2
-  
+
+  - name: Create directory /srv/ks
+    ansible.builtin.file:
+      path: /srv/ks
+      state: directory
+      recurse: yes 
+
+  - name: Copy user-data
+    ansible.builtin.copy:
+      src: user-data
+      dest: /srv/ks/user-data
+
+  - name: Create an empty file meta-data
+    ansible.builtin.file:
+      path: /srv/ks/meta-data
+      state: touch      
+    notify: 
+      - Restart dnsmasq
+      - Restart apache2
+
   handlers:
   - name: Restart dnsmasq
     ansible.builtin.service:
