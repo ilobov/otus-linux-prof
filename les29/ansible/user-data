@@ -1,5 +1,6 @@
 #cloud-config
 autoinstall:
+  version: 1
   identity:
     username: otus
     realname: otus
@@ -18,13 +19,15 @@ autoinstall:
     geoip: true
     preserve_sources_list: false
     primary:
-      - arches:
-        - amd64
-        - i386
-        uri: http://us.archive.ubuntu.com/ubuntu
-      - arches:
-        - default
-        uri: http://ports.ubuntu.com/ubuntu-ports
+      - uri: http://us.archive.ubuntu.com/ubuntu
+        arches:
+          - amd64
+          - i386
+        
+      - uri: http://ports.ubuntu.com/ubuntu-ports
+        arches:
+          - default
+        
     drivers:
       install: false
 
@@ -34,10 +37,10 @@ autoinstall:
     layout: us
     toggle: null
     variant: ''
-    locale: en_US.UTF-8
+  locale: en_US.UTF-8
   ssh:
     allow-pw: true
     authorized-keys: []
     install-server: true
     updates: security
-    version: 1
+    
