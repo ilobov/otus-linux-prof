@@ -100,6 +100,10 @@ Vagrant.configure("2") do |config|
         mkdir -p ~root/.ssh
         cp ~vagrant/.ssh/auth* ~root/.ssh
       SHELL
+      config.vm.provision "shell", inline: <<-SHELL
+        echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+        echo "nameserver 8.8.4.4" | sudo tee -a /etc/resolv.conf > /dev/null
+      SHELL
     end
   end
 end
