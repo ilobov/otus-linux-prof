@@ -134,9 +134,9 @@ office2Server
 
   Для настройки маршрутизации между роутерами используем следующие подсети:
 
-  192.168.255.0/30 (inetRouter - centralRouter)
-  192.168.255.4/30 (centralRouter - office2Router)
-  192.168.255.8/30 (centralRouter - office1Router)
+  192.168.255.0/30 (inetRouter - centralRouter)  
+  192.168.255.4/30 (centralRouter - office2Router)  
+  192.168.255.8/30 (centralRouter - office1Router)  
 
 * Краткое описание настройки
 
