@@ -116,7 +116,89 @@ office2Server
 
 #### Практическая часть
 
+* Развертывание стенда
+
+    - Запускаем создание ВМ через Vagrant   
+
+        vargant up
+
+    - Настраиваем ВМ при помощи Ansible
+
+        ansible-playbook nets.yml
+
+* Схема сети
+
+  Изучив таблицу топологии сети и Vagrant-стенд из задания, мы можем построить полную схему сети:
+
+  ![Nets](https://github.com/ilobov/otus-linux-prof/blob/main/les28/nets.png)
+
+  Для настройки маршрутизации между роутерами используем следующие подсети:
+
+  192.168.255.0/30 (inetRouter - centralRouter)
+  192.168.255.4/30 (centralRouter - office2Router)
+  192.168.255.8/30 (centralRouter - office1Router)
+
+* Краткое описание настройки
+
+  Для того, чтобы на всех серверах работал интернет, на сервере inetRouter должен быть настроен NAT.
+  Команда для настройки: 
+
+    iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o enp0s3 -j MASQUERADE
+
+  Для сохранения правил iptables устанавливаем пакет iptables-persistent и сохранаем правила в файл /etc/iptables/rules.v4
+
+  На роутерах включаем возможность маршрутизации транзитных пакетов:
+
+    echo "net.ipv4.conf.all.forwarding = 1" >> /etc/sysctl.conf
+    sysctl -p
+
+  Для nat интерфейсов ВМ отключаем дефолтный маршрут.
+
+  Для серверов добавляем дефолтные маршруты на их роутеры.
+
+  Для роутеров office1Router и office2Router устанавливаем дефолтный маршрут на centralRouter, для centralRouter на inetRouter.
+
+  Для корректной работы маршрутизации внутри сети на centralRouter добавляем маршруты:
+
+  192.168.2.0/24 via: 192.168.255.10
+  192.168.1.0/24 via: 192.168.255.6
+
+  на inetRouter:
+
+  192.168.2.0/24 via: 192.168.255.2
+  192.168.1.0/24 via: 192.168.255.2
+  192.168.0.0/24 via: 192.168.255.2
+
 * Проверка работы
 
-  После окончания установки выключаем виртуальную машину. Меняем порядок загрузки с "Сеть" на "Жесткий диск". Запускаем ВМ.
-  Логинимся. Username: otus Password: 123
+Подключаюсь к office1Server и проверяю доступность остальных серверов и выход в интернет:
+
+```
+root@office1Server:~# ping 192.168.0.2  
+PING 192.168.0.2 (192.168.0.2) 56(84) bytes of data.  
+64 bytes from 192.168.0.2: icmp_seq=1 ttl=62 time=1.95 ms   
+64 bytes from 192.168.0.2: icmp_seq=2 ttl=62 time=1.69 ms  
+
+root@office1Server:~# ping 192.168.1.2  
+PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.  
+64 bytes from 192.168.1.2: icmp_seq=1 ttl=61 time=1.83 ms  
+64 bytes from 192.168.1.2: icmp_seq=2 ttl=61 time=1.74 ms  
+
+root@office1Server:~# traceroute 192.168.1.2  
+traceroute to 192.168.1.2 (192.168.1.2), 64 hops max  
+  1   192.168.2.129  0.587ms  0.822ms  0.445ms   
+  2   192.168.255.9  1.049ms  0.838ms  0.761ms   
+  3   192.168.255.6  1.222ms  1.010ms  1.303ms   
+  4   192.168.1.2  1.770ms  1.198ms  1.124ms  
+
+root@office1Server:~# traceroute 8.8.8.8
+traceroute to 8.8.8.8 (8.8.8.8), 64 hops max
+  1   192.168.2.129  0.832ms  0.636ms  0.331ms 
+  2   192.168.255.9  1.478ms  1.353ms  1.460ms 
+  3   192.168.255.1  1.486ms  1.435ms  0.749ms 
+  4   10.0.2.2  1.225ms  0.909ms  0.908ms 
+
+ 24   *  *  * 
+ 25   8.8.8.8  32.071ms  31.114ms  31.282ms
+
+```

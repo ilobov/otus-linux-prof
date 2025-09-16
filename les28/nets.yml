@@ -13,6 +13,14 @@
   # gather_facts: false
   become: true
   tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+
   - name: Stop and disable ufw
     ansible.builtin.service:
       name: ufw
@@ -63,6 +71,6 @@
       group: root
       mode: 0644
 
-  # - name: restart all hosts
-  #   reboot:
-  #     reboot_timeout: 600
+  - name: restart all hosts
+    reboot:
+      reboot_timeout: 600
