@@ -1,0 +1,13 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 192.168.255.13/30
+      routes:
+        - to: 192.168.0.0/24
+          via: 192.168.255.14
+    enp0s19:
+      addresses:
+      - 192.168.50.13/24

@@ -1,0 +1,90 @@
+# - name: Apt update
+#   hosts: all
+#   gather_facts: false
+#   become: true
+#   tasks:
+#   - name: update
+#     apt: 
+#       update_cache=yes
+
+
+- name: Routers
+  hosts: all
+  # gather_facts: false
+  become: true
+  tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Stop and disable ufw
+    ansible.builtin.service:
+      name: ufw
+      state: stopped
+      enabled: false
+    when: (ansible_hostname == "inetRouter")
+
+  - name: Install iptables-persistent
+    ansible.builtin.apt:
+      name: iptables-persistent
+      state: present
+      update_cache: yes
+    when: ansible_hostname == "inetRouter" or ansible_hostname == "inetRouter2"
+
+  - name: Set up NAT on inetRouter
+    template: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: root
+      group: root
+      mode: "{{ item.mode }}"
+    with_items:
+      - { src: "iptables_rules.ipv4", dest: "/etc/iptables/rules.v4", mode: "0644" }
+      # - { src: "iptables_restore", dest: "/etc/network/if-pre-up.d/iptables", mode: "0755" }
+    when: (ansible_hostname == "inetRouter")
+
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+    when: "'routers' in group_names"
+
+  - name: disable default route
+    template: 
+      src: 00-installer-config.yaml
+      dest: /etc/netplan/00-installer-config.yaml
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname != "inetRouter")
+
+  - name: add default gateway for centralRouter
+    template: 
+      src: "50-vagrant_{{ansible_hostname}}.yaml"
+      dest: /etc/netplan/50-vagrant.yaml
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Install nginx
+    ansible.builtin.apt:
+      name: nginx
+      state: present
+      update_cache: yes
+    when: (ansible_hostname == "centralServer")
+
+  - name: Set up DNAT on inetRouter2
+    template: 
+      src: inetRouter2_rules.ipv4
+      dest: /etc/iptables/rules.v4
+      mode: 0644
+    when: (ansible_hostname == "inetRouter2")
+
+  # - name: restart all hosts
+  #   reboot:
+  #     reboot_timeout: 600
