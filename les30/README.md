@@ -1,120 +1,21 @@
-## Разворачиваем сетевую лабораторию
+## Сценарии iptables
 
 ### Задание
 
-https://github.com/erlong15/otus-linux/tree/network
-(ветка network)
-
-Vagrantfile с начальным построением сети
-
-inetRouter
-centralRouter
-centralServer
-тестировалось на virtualbox
-
-
-Планируемая архитектура
-
-построить следующую архитектуру
-
-Сеть office1
-
-192.168.2.0/26 - dev
-192.168.2.64/26 - test servers
-192.168.2.128/26 - managers
-192.168.2.192/26 - office hardware
-Сеть office2
-
-192.168.1.0/25 - dev
-192.168.1.128/26 - test servers
-192.168.1.192/26 - office hardware
-Сеть central
-
-192.168.0.0/28 - directors
-192.168.0.32/28 - office hardware
-192.168.0.64/26 - wifi
-Office1 ---\
-                   -----> Central --IRouter --> internet
-Office2----/
-
-Итого должны получится следующие сервера
-
-inetRouter
-centralRouter
-office1Router
-office2Router
-centralServer
-office1Server
-office2Server
-
-Теоретическая часть
-
-Найти свободные подсети
-Посчитать сколько узлов в каждой подсети, включая свободные
-Указать broadcast адрес для каждой подсети
-проверить нет ли ошибок при разбиении
-
-Практическая часть
-
-Соединить офисы в сеть согласно схеме и настроить роутинг
-Все сервера и роутеры должны ходить в инет черз inetRouter
-Все сервера должны видеть друг друга
-у всех новых серверов отключить дефолт на нат (eth0), который вагрант поднимает для связи
-при нехватке сетевых интервейсов добавить по несколько адресов на интерфейс
-
-Формат сдачи ДЗ - vagrant + ansible
+1. Реализовать knocking port
+  - centralRouter может попасть на ssh inetrRouter через knock скрипт(пример в материалах)
+2. Добавить inetRouter2, который виден(маршрутизируется (host-only тип сети для виртуалки)) с хоста или форвардится порт через локалхост.
+3. Запустить nginx на centralServer.
+4. Пробросить 80й порт на inetRouter2 8080.
+5. Дефолт в инет оставить через inetRouter.
 
 
 ### Решение
 
-#### Теоретическая часть
+Для решиния задания используем схему сети из задаич "Разворачиваем сетевую лабораторию". Так как в задании не используются office1Router, office2Router, office1Server, office2Server исключаю их из схемы и добавляю ВМ inetRouter2.
 
-* Найти свободные подсети
+Использую подсеть 192.168.255.12/30 для связи (centralRouter - inetRouter2)
 
-В сетях office1 и office2 свободных подсетей нет.
-В сети central есть следующие свободные подсети:
-
-- 192.168.0.16/28
-- 192.168.0.48/28
-- 192.168.0.128/25
-
-* Посчитать сколько узлов в каждой подсети, включая свободные
-
-В сетях с маской */26 узлов 62. Это сети:
-- 192.168.2.0/26
-- 192.168.2.64/26
-- 192.168.2.128/26
-- 192.168.2.192/26
-- 192.168.1.128/26
-- 192.168.1.192/26
-- 192.168.0.64/26
-
-В сети 192.168.1.0/25 узлов 126
-
-В сетях 192.168.0.0/28, 192.168.0.32/28 узлов 14
-
-* Указать broadcast адрес для каждой подсети
-
-- 192.168.2.0/26 bcast 192.168.2.63
-- 192.168.2.64/26 bcast 192.168.2.127
-- 192.168.2.128/26 bcast 192.168.2.191
-- 192.168.2.192/26 bcast 192.168.2.255
-- 192.168.1.128/26 bcast 192.168.1.191
-- 192.168.1.192/26 bcast 192.168.1.255
-- 192.168.0.64/26 bcast 192.168.0.127
-- 192.168.1.0/25 bcast 192.168.0.127
-- 192.168.0.0/28 bcast 192.168.0.15
-- 192.168.0.32/28 bcast 192.168.0.47
-
-* проверить нет ли ошибок при разбиении
-
-Ошибок в разбиении нет
-
-
-
-
-
-#### Практическая часть
 
 * Развертывание стенда
 
@@ -126,79 +27,72 @@ office2Server
 
         ansible-playbook nets.yml
 
-* Схема сети
+* Проверка работа
 
-  Изучив таблицу топологии сети и Vagrant-стенд из задания, мы можем построить полную схему сети:
+Для открытия порта  ssh использую последовательность портов 11111 - 22222 - 33333 - 44444
 
-  ![Nets](https://github.com/ilobov/otus-linux-prof/blob/main/les28/nets.png)
-
-  Для настройки маршрутизации между роутерами используем следующие подсети:
-
-  192.168.255.0/30 (inetRouter - centralRouter)  
-  192.168.255.4/30 (centralRouter - office2Router)  
-  192.168.255.8/30 (centralRouter - office1Router)  
-
-* Краткое описание настройки
-
-  Для того, чтобы на всех серверах работал интернет, на сервере inetRouter должен быть настроен NAT.
-  Команда для настройки: 
-
-    iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o enp0s3 -j MASQUERADE
-
-  Для сохранения правил iptables устанавливаем пакет iptables-persistent и сохранаем правила в файл /etc/iptables/rules.v4
-
-  На роутерах включаем возможность маршрутизации транзитных пакетов:
-
-    echo "net.ipv4.conf.all.forwarding = 1" >> /etc/sysctl.conf
-    sysctl -p
-
-  Для nat интерфейсов ВМ отключаем дефолтный маршрут.
-
-  Для серверов добавляем дефолтные маршруты на их роутеры.
-
-  Для роутеров office1Router и office2Router устанавливаем дефолтный маршрут на centralRouter, для centralRouter на inetRouter.
-
-  Для корректной работы маршрутизации внутри сети на centralRouter добавляем маршруты:
-
-  192.168.2.0/24 via: 192.168.255.10
-  192.168.1.0/24 via: 192.168.255.6
-
-  на inetRouter:
-
-  192.168.2.0/24 via: 192.168.255.2
-  192.168.1.0/24 via: 192.168.255.2
-  192.168.0.0/24 via: 192.168.255.2
-
-* Проверка работы
-
-Подключаюсь к office1Server и проверяю доступность остальных серверов и выход в интернет:
+С сервера centralRouter выполняю проверку:
 
 ```
-root@office1Server:~# ping 192.168.0.2  
-PING 192.168.0.2 (192.168.0.2) 56(84) bytes of data.  
-64 bytes from 192.168.0.2: icmp_seq=1 ttl=62 time=1.95 ms   
-64 bytes from 192.168.0.2: icmp_seq=2 ttl=62 time=1.69 ms  
+root@centralRouter:~# telnet 192.168.255.1 22
+Trying 192.168.255.1...
 
-root@office1Server:~# ping 192.168.1.2  
-PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.  
-64 bytes from 192.168.1.2: icmp_seq=1 ttl=61 time=1.83 ms  
-64 bytes from 192.168.1.2: icmp_seq=2 ttl=61 time=1.74 ms  
+Порт 22 не доступен.
 
-root@office1Server:~# traceroute 192.168.1.2  
-traceroute to 192.168.1.2 (192.168.1.2), 64 hops max  
-  1   192.168.2.129  0.587ms  0.822ms  0.445ms   
-  2   192.168.255.9  1.049ms  0.838ms  0.761ms   
-  3   192.168.255.6  1.222ms  1.010ms  1.303ms   
-  4   192.168.1.2  1.770ms  1.198ms  1.124ms  
+root@centralRouter:~# for p in 11111 22222 33333 44444 ; do netcat -w1 192.168.255.1 "$p" ; done
 
-root@office1Server:~# traceroute 8.8.8.8
-traceroute to 8.8.8.8 (8.8.8.8), 64 hops max
-  1   192.168.2.129  0.832ms  0.636ms  0.331ms 
-  2   192.168.255.9  1.478ms  1.353ms  1.460ms 
-  3   192.168.255.1  1.486ms  1.435ms  0.749ms 
-  4   10.0.2.2  1.225ms  0.909ms  0.908ms 
+root@centralRouter:~# telnet 192.168.255.1 22
+Trying 192.168.255.1...
+Connected to 192.168.255.1.
+Escape character is '^]'.
+SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.13
 
- 24   *  *  * 
- 25   8.8.8.8  32.071ms  31.114ms  31.282ms
+После обращения к последовательности портов появился доступ к порту 22 на 30 секунд
 
+```
+
+Проверка проброса порта. 
+
+С хостовой машины обращаюсь к inetRouter2 порт 8080
+
+```
+liv@liv-HP:~/otus/work/les30$ curl http://192.168.50.13:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+
+Получаю ответ от сервера centralServer, который работает на порту 80
+```
+vagrant@centralServer:~$ ss -tulnp
+Netid             State              Recv-Q             Send-Q                            Local Address:Port                          Peer Address:Port             Process             
+udp               UNCONN             0                  0                                 127.0.0.53%lo:53                                 0.0.0.0:*                                    
+udp               UNCONN             0                  0                              10.0.2.15%enp0s3:68                                 0.0.0.0:*                                    
+tcp               LISTEN             0                  4096                              127.0.0.53%lo:53                                 0.0.0.0:*                                    
+tcp               LISTEN             0                  511                                     0.0.0.0:80                                 0.0.0.0:*                                    
+tcp               LISTEN             0                  128                                     0.0.0.0:22                                 0.0.0.0:*                                    
+tcp               LISTEN             0                  511                                        [::]:80                                    [::]:*                                    
+tcp               LISTEN             0                  128                                        [::]:22                                    [::]:* 
 ```
