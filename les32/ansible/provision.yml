@@ -1,0 +1,56 @@
+- name: OSPF
+  hosts: all
+  # gather_facts: false
+  become: true
+  tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: install base tools
+    apt:
+      name:
+        - vim
+        - traceroute
+        - tcpdump
+        - net-tools
+        - frr
+      state: present
+      update_cache: true
+
+  - name: Stop and disable ufw
+    ansible.builtin.service:
+      name: ufw
+      state: stopped
+      enabled: false
+
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+
+  - name: Заменить строку 'old_text' на 'new_text' в файле /etc/example.conf
+    ansible.builtin.lineinfile:
+      path: /etc/frr/daemons
+      regexp: '^ospfd=no'
+      line: 'ospfd=yes'
+      state: present
+
+  - name: set up OSPF 
+    template:
+      src: frr.conf.{{ansible_hostname}}
+      dest: /etc/frr/frr.conf
+      owner: frr
+      group: frr
+      mode: 0640
+
+  - name: restart FRR
+    service:
+      name: frr
+      state: restarted
+      enabled: true      

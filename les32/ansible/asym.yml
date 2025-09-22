@@ -1,0 +1,25 @@
+- name: OSPF
+  hosts: all
+  # gather_facts: false
+  become: true
+  tasks:
+  - name: set up asynchronous routing
+    sysctl:
+      name: net.ipv4.conf.all.rp_filter
+      value: '0'
+      state: present
+
+  - name: Заменить строку 'old_text' на 'new_text' в файле /etc/example.conf
+    ansible.builtin.lineinfile:
+      path: /etc/frr/frr.conf
+      regexp: '^!ip ospf cost 1000'
+      line: 'ip ospf cost 1000'
+      state: present
+    when: (ansible_hostname == "router1")
+
+  - name: restart FRR
+    service:
+      name: frr
+      state: restarted
+      enabled: true
+    when: (ansible_hostname == "router1")
