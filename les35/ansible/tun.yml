@@ -1,0 +1,17 @@
+- name: OpenVPN tun mode
+  hosts: all
+  # gather_facts: false
+  become: true
+  tasks:
+  - name: Change "tap" on "tun"
+    ansible.builtin.lineinfile:
+      path: /etc/openvpn/server.conf
+      regexp: '^dev tap'
+      line: 'dev tun'
+      state: present
+
+  - name: restart openvpn
+    service:
+      name: openvpn@server
+      state: restarted
+      enabled: true      
