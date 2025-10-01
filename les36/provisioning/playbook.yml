@@ -2,38 +2,60 @@
 - hosts: all
   become: yes
   tasks:
-  - name: install base tools
-    apt:
-      name:
-        - bind9
-        - bind9utils
-        - ntp
-      state: present
-      update_cache: true
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  # - name: Disable sslverify for yum
+  #   ansible.builtin.lineinfile:
+  #     path: /etc/yum.conf
+  #     line: "sslverify=false"
+  #     insertafter: EOF
+
+  - name: install packages
+    yum: name={{ item }} state=latest sslverify=false 
+    with_items:
+      - bind
+      - bind-utils
+      # - ntp
 
   - name: copy transferkey to all servers and the client
-    copy: src=named.zonetransfer.key dest=/etc/named.zonetransfer.key owner=root group=bind mode=0644
+    copy: src=named.zonetransfer.key dest=/etc/named.zonetransfer.key owner=root group=named mode=0644
 
-  - name: start and enable ntpd 
+  - name: start chronyd
     service: 
-      name: ntp
-      state: started
+      name: chronyd
+      state: restarted
       enabled: true
+
+  # - name: Set SELinux to permissive mode
+  #   ansible.posix.selinux:
+  #     state: permissive
+  # - name: start and enable ntpd 
+  #   service: 
+  #     name: ntp
+  #     state: started
+  #     enabled: true
 
 - hosts: ns01
   become: yes
   tasks:
   - name: copy named.conf
-    copy: src=master-named.conf dest=/etc/named.conf owner=root group=bind mode=0640
+    copy: src=master-named.conf dest=/etc/named.conf owner=root group=named mode=0640
   - name: copy zones
-    copy: src={{ item }} dest=/etc/named/ owner=root group=bind mode=0660
+    copy: src={{ item }} dest=/etc/named/ owner=root group=named mode=0660
     with_fileglob:
       - named.d*
+      - named.newdns.lab
   - name: copy resolv.conf to the servers
     template: src=servers-resolv.conf.j2 dest=/etc/resolv.conf owner=root group=root mode=0644
   
   - name: set /etc/named permissions
-    file: path=/etc/named owner=root group=bind mode=0670
+    file: path=/etc/named owner=root group=named mode=0670
 
   - name: ensure named is running and enabled
     service: name=named state=restarted enabled=yes
@@ -42,12 +64,12 @@
   become: yes
   tasks:
   - name: copy named.conf
-    copy: src=slave-named.conf dest=/etc/named.conf owner=root group=bind mode=0640
+    copy: src=slave-named.conf dest=/etc/named.conf owner=root group=named mode=0640
   - name: copy resolv.conf to the servers
     template: src=servers-resolv.conf.j2 dest=/etc/resolv.conf owner=root group=root mode=0644
 
   - name: set /etc/named permissions
-    file: path=/etc/named owner=root group=bind mode=0670 state=directory
+    file: path=/etc/named owner=root group=named mode=0670 state=directory
 
   - name: ensure named is running and enabled
     service: name=named state=restarted enabled=yes
