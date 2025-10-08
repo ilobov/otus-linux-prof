@@ -1,0 +1,98 @@
+- name: All
+  hosts: all
+  become: true
+  tasks:
+  - name: Ensure specific nameserver is present
+    ansible.builtin.lineinfile:
+      path: /etc/resolv.conf
+      line: "nameserver 8.8.8.8"
+      insertafter: "EOF"
+      state: present
+
+  - name: Set timezone to Europe/Moscow
+    community.general.timezone:
+      name: Europe/Moscow
+
+  - name: make sure chronyd is installed
+    yum:
+     name: chrony
+     state: latest
+     sslverify: false
+     update_cache: yes
+
+  - name: Restart chronyd
+    service:
+      name: chronyd
+      state: restarted      
+
+  - name: Stop and disable firewalld.
+    service:
+      name: firewalld
+      state: stopped
+      enabled: false
+    ignore_errors: yes
+
+  - name: disable SElinux
+    selinux:
+      state: disabled
+  
+  - name: disable SElinux now
+    shell: setenforce 0
+    ignore_errors: yes
+
+  - name: Add a line /etc/hosts
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      line: "192.168.57.10 ipa.otus.lan ipa"
+      insertafter: EOF
+      state: present
+
+- name: IPA Server
+  hosts: ipa
+  become: true
+  tasks:
+  - name: install software
+    yum:
+      name:
+        - freeipa-server
+      state: present
+      sslverify: false
+      update_cache: true
+      
+  - name: Check current IPA status
+    command: ipactl status
+    register: ipa_status
+    ignore_errors: yes
+
+  - name: Run ipa-server-install
+    shell: ipa-server-install --domain otus.lan --realm OTUS.LAN --ds-password Test1234 --admin-password Admin1234 --unattended
+    when: ipa_status.stdout is not regex("Directory Service. RUNNING")
+
+- name: IPA Clients
+  hosts: client1,client2
+  become: true
+  tasks:
+  - name: Add a line /etc/hosts
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      line: "{{ ansible_host }} {{ ansible_hostname }}.otus.lan {{ ansible_hostname }}"
+      insertafter: EOF
+      state: present
+
+  - name: install software
+    yum:
+      name:
+        - freeipa-client
+      state: present
+      sslverify: false
+      update_cache: true
+
+  - name: Check current IPA status
+    command: ipa
+    register: ipa_client_status
+    ignore_errors: yes
+
+  - name: add host to ipa-server
+    shell: echo -e "yes\nyes" | ipa-client-install --mkhomedir --domain=OTUS.LAN --server=ipa.otus.lan --no-ntp -p admin -w Admin1234      
+    when: ipa_client_status.stderr is regex("IPA client is not configured on this system")
+      
