@@ -66,7 +66,8 @@
 
     Подключаемся в браузере по адресу https://ipa.otus.lan. Вводим пользователя admin и пароль. 
 
-    ![Web ipa server](https://github.com/ilobov/otus-linux-prof/blob/main/les38/ipa.png)
+    
+![Web](https://github.com/ilobov/otus-linux-prof/blob/main/les38/ipa.png)
 
   2. Проверяем IPA клиента
 
