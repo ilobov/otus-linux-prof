@@ -44,13 +44,13 @@ nginx + php-fpm (wordpress) + python (flask) + node js;
 
   1. Flask
 
-    ![Flask](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/flask.png)
+![Flask](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/flask.png)
 
   2. Node js
 
-    ![Node](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/nodejs.png)
+![Node](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/nodejs.png)
 
   3. Wordpress
 
-    ![Wordpress](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/wordpress.png)
+![Wordpress](https://github.com/ilobov/otus-linux-prof/blob/main/les42/png/wordpress.png)
 
