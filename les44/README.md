@@ -37,10 +37,10 @@
 
 2. Установка mysql
 
-  На обеих ВМ запускаю:
-
-  apt update
-  apt install mysql-server
+        На обеих ВМ запускаю:
+      
+        apt update  
+        apt install mysql-server  
 
 3. Настройка конфигов
 
