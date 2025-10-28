@@ -9,11 +9,11 @@
 Базу развернуть на мастере и настроить так, чтобы реплицировались таблицы:
 
 
-| bookmaker          |
-| competition        |
- market              |
-| odds               |
-| outcome
+| bookmaker          |  
+| competition        |  
+ market              |  
+| odds               |  
+| outcome  
 
 Настроить GTID репликацию
 
@@ -359,10 +359,10 @@
   | outcome       |
   +---------------+
   5 rows in set (0.01 sec)
-  
+
   mysql> show replica status\G;
   *************************** 1. row ***************************
-  
+
              Retrieved_Gtid_Set: ca0c9edb-b33f-11f0-9098-02291e731fd5:145-146
               Executed_Gtid_Set: ca0c9edb-b33f-11f0-9098-02291e731fd5:1-146
   ```
