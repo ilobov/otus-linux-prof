@@ -1,0 +1,10 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for install_barman
+master_ip: '192.168.57.11'
+master_user: 'postgres'
+barman_ip: '192.168.57.13'
+barman_user: 'barman'
+barman_user_password: 'Zxcv4321!'
+barman_host: 'barman'
+postgres_host: 'node1'
