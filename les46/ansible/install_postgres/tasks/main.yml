@@ -1,0 +1,18 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for install_postgres
+# Устанавливаем postgresql14-server
+  - name: install postgresql-server 14
+    apt: 
+      name: 
+          - postgresql 
+          - postgresql-contrib
+      state: present
+      update_cache: true
+  
+  # Запускаем postgresql-14
+  - name: enable and start service
+    service:
+      name: postgresql
+      state: started
+      enabled: true

@@ -1,0 +1,97 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for postgres_replication
+# Установка python-пакетов для модулей psql
+  - name: install base tools
+    apt:
+      name:
+        - python3-pexpect
+        - python3-psycopg2
+      state: present
+      update_cache: true
+
+#CREATE USER replicator WITH REPLICATION Encrypted PASSWORD 'replicator_password';
+  - name: Create replicator user
+    command: sudo -u postgres psql -c "CREATE USER replicator WITH REPLICATION Encrypted PASSWORD '{{ replicator_password }}';"
+    ignore_errors: true
+    when: (ansible_hostname == master_hostname)
+
+  #Останавливаем postgresql-14 на хосте node2
+  - name: stop postgresql-server on node2
+    service: 
+      name: postgresql
+      state: stopped
+    when: (ansible_hostname == slave_hostname)
+
+  #Редактируем конфигурационный файл postgresql.conf
+  - name: Change postgresql.conf on master
+    ansible.builtin.lineinfile:
+      path: /etc/postgresql/14/main/postgresql.conf
+      line: "{{ item }}"
+      state: present
+      create: true
+    loop:
+      - "listen_addresses = 'localhost, {{ master_ip }}'"
+      - "hot_standby = on"
+      - "wal_level = replica"
+      - "max_wal_senders = 3"
+      - "max_replication_slots = 3"
+      - "hot_standby_feedback = on"
+    when: (ansible_hostname == master_hostname)
+  
+  #Копируем конфигурационный файл pg_hba.conf
+  - name: copy pg_hba.conf
+    template:
+      src: pg_hba.conf.j2
+      dest: /etc/postgresql/14/main/pg_hba.conf
+      owner: postgres
+      group: postgres
+      mode: '0600'
+    when: (ansible_hostname == master_hostname)
+   #Перезапускаем службу  postgresql-14
+  - name: restart postgresql-server on node1
+    service: 
+      name: postgresql
+      state: restarted
+    when: (ansible_hostname == master_hostname)
+
+  #Удаляем содержимое каталога /var/lib/postgresql/14/main/
+  - name: Remove files from data catalog
+    file:
+      path: /var/lib/postgresql/14/main/
+      state: absent
+    when: (ansible_hostname == slave_hostname)
+
+  #Копируем данные с node1 на node2
+  - name: copy files from master to slave
+    expect:
+      command: 'sudo -u postgres pg_basebackup -h {{ master_ip }} -U replicator -p 5432 -D /var/lib/postgresql/14/main/ -R -P'
+      responses: 
+        '.*Password*': "{{ replicator_password }}"
+    when: (ansible_hostname == slave_hostname)
+
+  #Редактируем конфигурационный файл postgresql.conf
+  - name: Change postgresql.conf on slave
+    ansible.builtin.lineinfile:
+      path: /etc/postgresql/14/main/postgresql.conf
+      line: "listen_addresses = 'localhost, {{ slave_ip }}'"
+      state: present
+      create: true
+    when: (ansible_hostname == slave_hostname)
+
+  #Копируем конфигурационный файл pg_hba.conf
+  - name: copy pg_hba.conf
+    template:
+      src: pg_hba.conf.j2
+      dest:  /etc/postgresql/14/main/pg_hba.conf
+      owner: postgres
+      group: postgres
+      mode: '0600'
+    when: (ansible_hostname == slave_hostname)
+   
+  #Запускаем службу postgresql-14 на хосте node2
+  - name: start postgresql-server on node2
+    service: 
+      name: postgresql
+      state: started
+    when: (ansible_hostname == slave_hostname)

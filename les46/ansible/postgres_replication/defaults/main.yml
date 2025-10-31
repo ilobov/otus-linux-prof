@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for postgres_replication
+replicator_password: 'Otus1234!'
+master_ip: '192.168.57.11'
+slave_ip: '192.168.57.12'
+master_hostname: 'node1'
+slave_hostname: 'node2'

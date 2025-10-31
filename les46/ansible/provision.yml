@@ -9,5 +9,19 @@
       owner: root
       group: root
       mode: 0644
+  #Устанавливаем vim и telnet (для более удобной работы с хостами)
+  - name: install base tools
+    apt:
+      name:
+        - vim
+        - telnet
+      state: present
+      update_cache: true
 
 
+- name: install postgres 14 and set up replication
+  hosts: node1,node2
+  become: yes
+  roles:
+    - install_postgres
+    - postgres_replication
