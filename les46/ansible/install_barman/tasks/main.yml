@@ -86,7 +86,7 @@
 
   #CREATE USER barman ;
   - name: Create barman user
-    command: sudo -u postgres psql -c "CREATE USER {{ barman_user }} WITH REPLICATION Encrypted PASSWORD '{{ barman_user_password }}';"
+    command: sudo -u postgres psql -c "CREATE USER {{ barman_user }} WITH SUPERUSER Encrypted PASSWORD '{{ barman_user_password }}';"
     ignore_errors: true
     when: (ansible_hostname == postgres_host)
 
