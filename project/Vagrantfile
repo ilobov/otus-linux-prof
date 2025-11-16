@@ -1,0 +1,56 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :front => {
+        :box_name => "generic/ubuntu2204",
+        :vm_name => "front",
+        :net => [
+                   { adapter: 2, ip: '10.0.0.1', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
+                   { ip: '192.168.57.10', adapter: 8},
+                ]
+  },
+  :back1 => {
+        :box_name => "generic/ubuntu2204",
+        :vm_name => "back1",
+        :net => [
+                   { adapter: 2, ip: '10.0.0.2', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
+                ]
+  },
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+    
+    config.vm.define boxname do |box|
+   
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxconfig[:vm_name]
+
+      config.vm.provider "virtualbox" do |v|
+        v.memory = 1024
+        v.cpus = 2
+       end
+
+      if boxconfig[:vm_name] == "back1"
+       box.vm.provision "ansible" do |ansible|
+        ansible.playbook = "ansible/provision.yml"
+        ansible.inventory_path = "ansible/hosts"
+        ansible.host_key_checking = "false"
+        ansible.become = "true"
+        ansible.limit = "all"
+       end
+      end
+
+      boxconfig[:net].each do |ipconf|
+        box.vm.network "private_network", **ipconf
+      end  
+
+      # box.vm.provision "shell", inline: <<-SHELL
+      #   mkdir -p ~root/.ssh
+      #   cp ~vagrant/.ssh/auth* ~root/.ssh
+      # SHELL
+    end
+  end
+end
