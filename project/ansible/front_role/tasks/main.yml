@@ -7,8 +7,10 @@
 
 - name: NGINX | Install NGINX
   apt:
-    name: nginx
-    state: latest
+    name:
+      - nginx
+      - iptables-persistent
+    state: present
     update_cache: yes
 
 - name: NGINX | Create NGINX config file from template
@@ -21,3 +23,17 @@
     name: nginx
     state: restarted
     enabled: yes
+
+- name: set firewall rules
+  template:
+    src: templates/rules.v4
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure iptables service is enabled and started
+  ansible.builtin.service:
+    name: iptables
+    state: started
+    enabled: true    
