@@ -13,9 +13,28 @@
     state: present
     update_cache: yes
 
+- name: Generate private key
+  community.crypto.openssl_privatekey:
+    path: "{{ private_key_path }}"
+    size: 2048
+    mode: '0600'
+
+- name: Generate CSR (Certificate Signing Request)
+  community.crypto.openssl_csr:
+    path: "{{ csr_path }}"
+    privatekey_path: "{{ private_key_path }}"
+    common_name: "{{ common_name }}"
+
+- name: Generate self-signed certificate
+  community.crypto.x509_certificate:
+    path: "{{ cert_path }}"
+    privatekey_path: "{{ private_key_path }}"
+    csr_path: "{{ csr_path }}"
+    provider: selfsigned
+
 - name: NGINX | Create NGINX config file from template
   template:
-    src: templates/nginx.conf
+    src: templates/nginx.conf.j2
     dest: /etc/nginx/nginx.conf
 
 - name: restart nginx
@@ -36,4 +55,4 @@
   ansible.builtin.service:
     name: iptables
     state: started
-    enabled: true    
+    enabled: true

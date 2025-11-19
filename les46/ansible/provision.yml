@@ -8,7 +8,7 @@
       dest: /etc/resolv.conf
       owner: root
       group: root
-      mode: 0644
+      mode: "0644"
   #Устанавливаем vim и telnet (для более удобной работы с хостами)
   - name: install base tools
     apt:

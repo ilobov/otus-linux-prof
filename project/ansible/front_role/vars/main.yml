@@ -1,3 +1,8 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # vars file for front_role
+ssl_dir: /etc/ssl
+private_key_path: "{{ ssl_dir }}/private/my-nginx.key"
+csr_path: "{{ ssl_dir }}/my-nginx.csr"
+cert_path: "{{ ssl_dir }}/certs/my-nginx.crt"
+common_name: myproject.test
