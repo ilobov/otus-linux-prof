@@ -15,3 +15,15 @@
   become: yes
   roles:
     - front_role
+
+- name: setup db
+  hosts: db
+  become: yes
+  roles:
+    - db_role
+
+- name: setup back
+  hosts: back1,back2
+  become: yes
+  roles:
+    - back_role

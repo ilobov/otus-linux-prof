@@ -4,6 +4,11 @@ events {
 }
 
 http {
+    upstream app{
+      server 10.0.0.2;
+      server 10.0.0.3;
+    }
+
     server {
         listen       80;
 	    listen	443 ssl;
@@ -12,8 +17,9 @@ http {
 	    ssl_certificate {{ cert_path }};
 	    ssl_certificate_key {{ private_key_path }};
 
-        location / {
-        }
+      location / {
+          proxy_pass http://app;
+      }
     }
 }
 

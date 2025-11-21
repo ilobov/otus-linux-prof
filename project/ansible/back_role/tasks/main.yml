@@ -1,0 +1,80 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for back_role
+- name: Install apache2 and php
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+      - openssl
+      - php-imagick
+      - php-gd
+      - php
+      - php-mysql
+      - unzip
+      - php-imap
+      - php-intl
+      - php-json
+      - php-ldap
+      - php-mbstring
+      - php-smbclient
+      - php-ssh2
+      - php-sqlite3
+      - php-xml
+      - php-zip
+    state: present
+    update_cache: yes
+
+- name: Ensure Apache is running
+  service:
+    name: apache2
+    state: started
+    enabled: true    
+
+- name: Download joomla
+  ansible.builtin.get_url:
+    url: https://downloads.joomla.org/cms/joomla5/5-3-0/Joomla_5-3-0-Stable-Full_Package.zip?format=zip
+    dest: /tmp/Joomla_5-3-0-Stable-Full_Package.zip
+    mode: '0644'
+    validate_certs: no
+
+- name: Create a new directory for joomla
+  ansible.builtin.file:
+    path: /var/www/html/joomla
+    state: directory
+    mode: '0755'
+    owner: www-data
+    group: www-data
+
+- name: Extract archive
+  ansible.builtin.unarchive:
+    src: /tmp/Joomla_5-3-0-Stable-Full_Package.zip
+    dest: /var/www/html/joomla
+    remote_src: yes
+
+- name: Copy joomla.conf into apache2
+  template:
+    src: templates/configuration.php
+    dest: /var/www/html/joomla/configuration.php
+
+- name: Delete a directory
+  ansible.builtin.file:
+    path: /var/www/html/joomla/installation
+    state: absent    
+
+- name: Recursively change ownership of a directory
+  ansible.builtin.file:
+    path: /var/www/html/joomla
+    owner: www-data
+    group: www-data
+    recurse: yes    
+
+- name: Copy joomla.conf into apache2
+  template:
+    src: templates/000-default.conf
+    dest: /etc/apache2/sites-available/000-default.conf
+
+- name: Restart Apache
+  ansible.builtin.service:
+    name: apache2
+    state: restarted

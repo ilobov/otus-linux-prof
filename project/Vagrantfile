@@ -7,7 +7,7 @@ MACHINES = {
         :vm_name => "front",
         :net => [
                    { adapter: 2, ip: '10.0.0.1', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
-                   { ip: '192.168.57.10', adapter: 8},
+                   { ip: '192.168.57.10', adapter: 8 },
                 ]
   },
   :back1 => {
@@ -15,6 +15,7 @@ MACHINES = {
         :vm_name => "back1",
         :net => [
                    { adapter: 2, ip: '10.0.0.2', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
+                   { ip: '192.168.57.11', adapter: 8 },
                 ]
   },
   :back2 => {
@@ -22,6 +23,7 @@ MACHINES = {
         :vm_name => "back2",
         :net => [
                    { adapter: 2, ip: '10.0.0.3', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
+                   { ip: '192.168.57.12', adapter: 8 },
                 ]
   },
   :db => {
