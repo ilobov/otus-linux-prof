@@ -1,15 +1,26 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for db_role
-- name: Install MariaDB server
+- name: Install MySQL server
   ansible.builtin.apt:
     name: 
-      - mariadb-server
+      - mysql-server
       - python3-pymysql
     state: present
     update_cache: yes
 
-- name: Create MariaDB database
+- name: Copy master.cnf
+  template:
+    src: templates/master.cnf
+    dest: /etc/mysql/mysql.conf.d/master.cnf
+
+- name: restart mysql
+  systemd:
+    name: mysql
+    state: restarted
+    enabled: yes
+
+- name: Create MySQL database
   community.mysql.mysql_db:
     name: joomla
     state: present
