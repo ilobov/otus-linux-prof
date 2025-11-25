@@ -52,7 +52,7 @@
     dest: /var/www/html/joomla
     remote_src: yes
 
-- name: Copy joomla.conf into apache2
+- name: Copy configuration.php into joomla
   template:
     src: templates/configuration.php
     dest: /var/www/html/joomla/configuration.php

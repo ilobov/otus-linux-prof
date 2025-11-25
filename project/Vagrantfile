@@ -23,7 +23,6 @@ MACHINES = {
         :vm_name => "back2",
         :net => [
                    { adapter: 2, ip: '10.0.0.3', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
-                   { ip: '192.168.57.12', adapter: 8 },
                 ]
   },
   :db => {

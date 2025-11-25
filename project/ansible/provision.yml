@@ -27,3 +27,10 @@
   become: yes
   roles:
     - back_role
+
+- name: setup repl
+  hosts: repl
+  become: yes
+  roles:
+    - repl_role
+

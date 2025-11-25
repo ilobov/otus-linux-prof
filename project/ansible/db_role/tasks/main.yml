@@ -14,6 +14,13 @@
     src: templates/master.cnf
     dest: /etc/mysql/mysql.conf.d/master.cnf
 
+- name: Set MySQL bind-address
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+    state: present    
+
 - name: restart mysql
   systemd:
     name: mysql
@@ -34,3 +41,26 @@
     priv: "joomla.*:ALL PRIVILEGES"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Create replication user
+  community.mysql.mysql_user:
+    name: repl_user
+    password: "ReplPassword123"
+    host: '%'
+    priv: '*.*:REPLICATION SLAVE'
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Dump master database
+  community.mysql.mysql_db:
+    state: dump
+    name: all
+    target: "/tmp/all_dump.sql"
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Copy database dump from master
+  ansible.builtin.fetch:
+    src: "/tmp/all_dump.sql"
+    dest: "/tmp/{{ inventory_hostname }}/"
+    flat: yes    
+    

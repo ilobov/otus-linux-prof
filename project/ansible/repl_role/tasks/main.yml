@@ -1,3 +1,57 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for repl_role
+- name: Install MySQL server
+  ansible.builtin.apt:
+    name: 
+      - mysql-server
+      - python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Copy slave.cnf
+  template:
+    src: templates/slave.cnf
+    dest: /etc/mysql/mysql.conf.d/slave.cnf
+
+- name: Set MySQL bind-address
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+    state: present    
+
+- name: restart mysql
+  systemd:
+    name: mysql
+    state: restarted
+    enabled: yes
+
+- name: Copy file with owner and permissions
+  ansible.builtin.copy:
+    src: /tmp/db/all_dump.sql
+    dest: /tmp/all_dump.sql
+
+- name: Import database dump
+  community.mysql.mysql_db:
+    state: import
+    name: all
+    target: "/tmp/all_dump.sql"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  ignore_errors: yes
+
+- name: Configure slave for replication
+  community.mysql.mysql_query:
+    query: >
+      CHANGE MASTER TO
+      MASTER_HOST='10.0.0.4',
+      MASTER_PORT = 3306,
+      MASTER_USER='repl_user',
+      MASTER_PASSWORD='ReplPassword123',
+      MASTER_AUTO_POSITION = 1;
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Start slave
+  community.mysql.mysql_query:
+    query: START SLAVE;
+    login_unix_socket: /run/mysqld/mysqld.sock
