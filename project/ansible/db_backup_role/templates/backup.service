@@ -1,0 +1,10 @@
+[Unit]
+Description=Mysql Backup
+
+[Service]
+Type=oneshot
+
+# Парольная фраза
+# Создание бэкапа
+ExecStart=/bin/bash /backup/run_backup.sh
+

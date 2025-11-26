@@ -1,0 +1,32 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for db_backup_role
+- name: Create a backup directory
+  ansible.builtin.file:
+    path: /backup/mysql
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+- name: Copy files service and timer
+  ansible.builtin.copy:
+    src: templates/run_backup.sh
+    dest: /backup/run_backup.sh
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+- name: Copy files service and timer
+  ansible.builtin.copy:
+    src: templates/
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Enable a timer unit for backup.timer
+  ansible.builtin.systemd_service:
+    name: backup.timer
+    state: started
+    enabled: true      

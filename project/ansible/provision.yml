@@ -34,3 +34,9 @@
   roles:
     - repl_role
 
+- name: setup backup
+  hosts: repl
+  become: yes
+  roles:
+    - db_backup_role
+

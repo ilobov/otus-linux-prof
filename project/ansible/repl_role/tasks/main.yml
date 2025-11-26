@@ -27,10 +27,17 @@
     state: restarted
     enabled: yes
 
+- name: Get MySQL replica status
+  community.mysql.mysql_replication:
+    login_unix_socket: /run/mysqld/mysqld.sock
+    mode: getreplica
+  register: replica_status
+
 - name: Copy file with owner and permissions
   ansible.builtin.copy:
     src: /tmp/db/all_dump.sql
     dest: /tmp/all_dump.sql
+  when: replica_status.Replica_IO_Running == "No"
 
 - name: Import database dump
   community.mysql.mysql_db:
@@ -38,7 +45,7 @@
     name: all
     target: "/tmp/all_dump.sql"
     login_unix_socket: /run/mysqld/mysqld.sock
-  ignore_errors: yes
+  when: replica_status.Replica_IO_Running == "No"
 
 - name: Configure slave for replication
   community.mysql.mysql_query:
@@ -50,8 +57,10 @@
       MASTER_PASSWORD='ReplPassword123',
       MASTER_AUTO_POSITION = 1;
     login_unix_socket: /run/mysqld/mysqld.sock
+  when: replica_status.Replica_IO_Running == "No"
 
 - name: Start slave
   community.mysql.mysql_query:
     query: START SLAVE;
     login_unix_socket: /run/mysqld/mysqld.sock
+  when: replica_status.Replica_IO_Running == "No"
