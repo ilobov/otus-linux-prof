@@ -47,13 +47,6 @@ MACHINES = {
                    { ip: '192.168.57.13', adapter: 8 },
             ]
   },
-  :log => {
-        :box_name => "generic/ubuntu2204",
-        :vm_name => "log",
-        :net => [
-                   { adapter: 2, ip: '10.0.0.7', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
-                ]
-  },
 }
 
 Vagrant.configure("2") do |config|
@@ -70,7 +63,7 @@ Vagrant.configure("2") do |config|
         v.cpus = 2
        end
 
-      if boxconfig[:vm_name] == "log"
+      if boxconfig[:vm_name] == "mon"
        box.vm.provision "ansible" do |ansible|
         ansible.playbook = "ansible/provision.yml"
         ansible.inventory_path = "ansible/hosts"

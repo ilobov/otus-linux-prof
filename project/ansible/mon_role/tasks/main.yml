@@ -1,3 +1,78 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for mon_role
+- name: Install unzip
+  apt:
+    pkg: 
+      - unzip
+      - adduser
+      - musl
+    state: latest
+    update_cache: yes
+
+- name: Create folder /etc/prometheus
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  loop:
+    - /etc/prometheus
+    - /etc/loki
+    - /var/lib/prometheus
+    - /loki/data
+    - /var/lib/alertmanager
+
+- name: Unzip prometheus
+  shell: |
+    tar -xvzf /vagrant/distr/prometheus-3.8.0-rc.1.linux-amd64.tar.gz -C /tmp/
+    cp /tmp/prometheus-3.8.0-rc.1.linux-amd64/prometheus /usr/bin/
+    unzip /vagrant/distr/loki-linux-amd64.zip -d /tmp/
+    cp /tmp/loki-linux-amd64 /usr/bin/loki
+    tar -xvzf /vagrant/distr/alertmanager-0.29.0.linux-amd64.tar.gz -C /tmp/
+    cp /tmp/alertmanager-0.29.0.linux-amd64/alertmanager /usr/bin/
+    cp /vagrant/distr/telegram.token /opt/telegram.token
+    dpkg -i /vagrant/distr/grafana-enterprise_12.3.0_19497075765_linux_amd64.deb
+
+- name: Copy configs for prometheus
+  copy:
+    src: "templates/{{ item }}"
+    dest: "/etc/prometheus/{{ item }}"
+  loop:
+    - alertmanager.yml
+    - rules.yml
+    - prometheus.yml
+    - telegram.tmpl
+
+- name: Copy datasources for grafana
+  copy:
+    src: templates/datasources.yml
+    dest: /etc/grafana/provisioning/datasources/datasources.yml
+
+- name: Copy configs for loki
+  template:
+    src: templates/loki-config.yml
+    dest: /etc/loki/loki-config.yml
+
+- name: Copy services
+  copy:
+    src: "templates/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+  loop:
+    - alertmanager.service
+    - prometheus.service
+    - loki.service
+
+- name: Enable services
+  ansible.builtin.systemd_service:
+    name: "{{ item  }}"
+    state: started
+    enabled: true
+  loop:
+    - alertmanager.service
+    - prometheus.service
+    - loki.service
+
+- name: restart grafana
+  service: 
+    name: grafana-server
+    state: restarted

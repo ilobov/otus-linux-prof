@@ -1,0 +1,5 @@
+- name: setup repl
+  hosts: mon
+  become: yes
+  roles:
+    - mon_role

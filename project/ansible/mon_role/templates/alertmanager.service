@@ -2,6 +2,8 @@
 Description=Alertmanager Service
 After=network.target
 [Service]
-ExecStart=/usr/local/bin/alertmanager
+ExecStart=/usr/bin/alertmanager \
+    --config.file /etc/prometheus/alertmanager.yml \
+    --storage.path /var/lib/alertmanager/
 [Install]
 WantedBy=multi-user.target
