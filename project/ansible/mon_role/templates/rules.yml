@@ -1,0 +1,14 @@
+groups:
+  - name: alert_group
+    rules:
+      - alert: NodeExporter
+        expr: up == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node exporter {{ $labels.instance }} is unavailable"
+          description: "Service {{ $labels.instance }} is unavailable\n "
+
+
+

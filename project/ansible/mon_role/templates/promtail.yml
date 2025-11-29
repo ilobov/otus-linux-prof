@@ -1,0 +1,45 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://10.0.0.6:3100/loki/api/v1/push
+    tenant_id: 1
+
+scrape_configs:
+  - job_name: apache_access
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: apache_access_logs
+          __path__: /var/log/apache2/access.log # Path to your Apache access log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<ip>\S+) \S+ \S+ \[(?P<time>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) (?P<protocol>\S+)" (?P<status>\d+) (?P<bytes>\S+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"$'
+      - labels:
+          ip:
+          method:
+          path:
+          status:
+          bytes:
+          referer:
+          user_agent:
+
+  - job_name: apache_error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: apache_error_logs
+          __path__: /var/log/apache2/error.log # Path to your Apache error log
+    pipeline_stages:
+      - regex:
+          expression: '\[(?P<time>[^\]]+)\] \[(?P<level>\S+)\] (?P<pid>\d+)(?P<thread_id>\S+)?:\s*(?P<message>.*)'
+      - labels:
+          level:
+          pid:
+          message:      

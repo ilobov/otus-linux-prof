@@ -1,0 +1,7 @@
+[Unit]
+Description=Alertmanager Service
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/alertmanager
+[Install]
+WantedBy=multi-user.target
