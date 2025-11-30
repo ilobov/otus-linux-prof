@@ -28,6 +28,7 @@ scrape_configs:
           bytes:
           referer:
           user_agent:
+          host: {{ inventory_hostname }}
 
   - job_name: apache_error
     static_configs:
@@ -36,6 +37,7 @@ scrape_configs:
         labels:
           job: apache_error_logs
           __path__: /var/log/apache2/error.log # Path to your Apache error log
+          host: {{ inventory_hostname }}
     pipeline_stages:
       - regex:
           expression: '\[(?P<time>[^\]]+)\] \[(?P<level>\S+)\] (?P<pid>\d+)(?P<thread_id>\S+)?:\s*(?P<message>.*)'
@@ -43,3 +45,4 @@ scrape_configs:
           level:
           pid:
           message:      
+          host: {{ inventory_hostname }}

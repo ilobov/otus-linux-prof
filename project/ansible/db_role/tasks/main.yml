@@ -6,6 +6,7 @@
     name: 
       - mysql-server
       - python3-pymysql
+      - unzip
     state: present
     update_cache: yes
 
@@ -63,4 +64,29 @@
     src: "/tmp/all_dump.sql"
     dest: "/tmp/{{ inventory_hostname }}/"
     flat: yes    
-    
+
+- name: Create folder /etc/promtail
+  ansible.builtin.file:
+    path: /etc/promtail
+    state: directory
+
+- name: Unzip promtail
+  shell: |
+    unzip /vagrant/distr/promtail-linux-amd64.zip -d /tmp/
+    mv /tmp/promtail-linux-amd64 /usr/bin/promtail
+
+- name: Copy files service
+  ansible.builtin.copy:
+    src: templates/promtail.service
+    dest: /etc/systemd/system/promtail.service
+
+- name: Copy promtail config
+  ansible.builtin.template:
+    src: templates/promtail.yml
+    dest: /etc/promtail/promtail.yml
+
+- name: Enable promtail.service
+  ansible.builtin.systemd_service:
+    name: promtail.service
+    state: started
+    enabled: true

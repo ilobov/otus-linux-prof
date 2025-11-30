@@ -1,0 +1,24 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://10.0.0.6:3100/loki/api/v1/push
+    tenant_id: 1
+
+scrape_configs:
+  - job_name: nginx_log
+    static_configs:
+    - labels:
+        host: front
+        type: nginx
+        job: access_output
+        __path__: /var/log/nginx/access.log
+    - labels:
+        host: front
+        type: nginx
+        job: error_output
+        __path__: /var/log/nginx/error.log

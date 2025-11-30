@@ -1,0 +1,5 @@
+- name: setup repl
+  hosts: back1, back2
+  become: yes
+  roles:
+    - back_role

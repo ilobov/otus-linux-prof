@@ -71,6 +71,7 @@
     - alertmanager.service
     - prometheus.service
     - loki.service
+    - grafana-server
 
 - name: restart grafana
   service: 

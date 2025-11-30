@@ -1,0 +1,9 @@
+[Unit]
+Description=Grafana Loki Service
+After=network.target  
+
+[Service]
+ExecStart=/usr/bin/promtail -config.file=/etc/promtail/promtail.yml
+
+[Install]
+WantedBy=multi-user.target  
