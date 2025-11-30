@@ -52,6 +52,15 @@
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
 
+- name: Create exporter user
+  community.mysql.mysql_user:
+    name: exporter
+    password: "ExpPassword123"
+    host: 'localhost'
+    priv: '*.*:PROCESS, REPLICATION CLIENT, SELECT'
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
 - name: Dump master database
   community.mysql.mysql_db:
     state: dump
@@ -74,11 +83,24 @@
   shell: |
     unzip /vagrant/distr/promtail-linux-amd64.zip -d /tmp/
     mv /tmp/promtail-linux-amd64 /usr/bin/promtail
+    tar xvf /vagrant/distr/mysqld_exporter-0.18.0.linux-amd64.tar.gz -C /tmp/
+    mv /tmp/mysqld_exporter-0.18.0.linux-amd64/mysqld_exporter /usr/bin/
+    chmod +x /usr/bin/mysqld_exporter
 
 - name: Copy files service
   ansible.builtin.copy:
     src: templates/promtail.service
     dest: /etc/systemd/system/promtail.service
+
+- name: Copy files mysql_exporter.service
+  ansible.builtin.copy:
+    src: templates/mysql_exporter.service
+    dest: /etc/systemd/system/mysql_exporter.service
+
+- name: Copy .mysqld_exporter.cnf
+  ansible.builtin.copy:
+    src: templates/.mysqld_exporter.cnf
+    dest: /etc/.mysqld_exporter.cnf
 
 - name: Copy promtail config
   ansible.builtin.template:
@@ -88,5 +110,11 @@
 - name: Enable promtail.service
   ansible.builtin.systemd_service:
     name: promtail.service
+    state: started
+    enabled: true
+
+- name: Enable mysql_exporter.service
+  ansible.builtin.systemd_service:
+    name: mysql_exporter.service
     state: started
     enabled: true

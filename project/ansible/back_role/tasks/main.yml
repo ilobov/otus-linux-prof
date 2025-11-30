@@ -25,6 +25,9 @@
     state: present
     update_cache: yes
 
+- name: Enable status module
+  shell: a2enmod status 
+
 - name: Ensure Apache is running
   service:
     name: apache2
@@ -88,6 +91,13 @@
   shell: |
     unzip /vagrant/distr/promtail-linux-amd64.zip -d /tmp/
     mv /tmp/promtail-linux-amd64 /usr/bin/promtail
+    tar -xvf /vagrant/distr/apache_exporter-1.0.11.linux-amd64.tar.gz -C /tmp/
+    cp /tmp/apache_exporter-1.0.11.linux-amd64/apache_exporter /usr/bin/
+
+- name: Copy files apache_exporter service
+  ansible.builtin.copy:
+    src: templates/apache_exporter.service
+    dest: /etc/systemd/system/apache_exporter.service
 
 - name: Copy files service
   ansible.builtin.copy:
@@ -102,5 +112,11 @@
 - name: Enable promtail.service
   ansible.builtin.systemd_service:
     name: promtail.service
+    state: started
+    enabled: true    
+
+- name: Enable apache_exporter.service
+  ansible.builtin.systemd_service:
+    name: apache_exporter.service
     state: started
     enabled: true    

@@ -21,5 +21,14 @@ http {
           proxy_pass http://app;
       }
     }
+
+    server {
+        listen 8080;
+        server_name _;
+        access_log off;
+      location /server-status {
+        stub_status on;
+      }
+    }
 }
 

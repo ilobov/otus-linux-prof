@@ -1,0 +1,9 @@
+[Unit]
+Description=Apache exporter Service
+After=network.target  
+
+[Service]
+ExecStart=/usr/bin/apache_exporter
+
+[Install]
+WantedBy=multi-user.target  
