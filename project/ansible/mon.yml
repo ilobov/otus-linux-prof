@@ -3,3 +3,4 @@
   become: yes
   roles:
     - mon_role
+    - node_exp_role

@@ -1,5 +1,6 @@
-- name: setup repl
-  hosts: back1, back2
+- name: setup back
+  hosts: back1
   become: yes
   roles:
     - back_role
+    - node_exp_role
