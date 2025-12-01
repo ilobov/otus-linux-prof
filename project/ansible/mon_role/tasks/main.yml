@@ -48,6 +48,11 @@
     src: templates/datasources.yml
     dest: /etc/grafana/provisioning/datasources/datasources.yml
 
+- name: Copy dashboards for grafana
+  copy:
+    src: templates/dashboards
+    dest: /etc/grafana/provisioning
+
 - name: Copy configs for loki
   template:
     src: templates/loki-config.yml

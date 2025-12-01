@@ -3,7 +3,7 @@ Description=Node Exporter Service
 After=network.target
 
 [Service]
-ExecStart=/snap/bin/nginx-prometheus-exporter -nginx.scrape-uri=http://127.0.0.1:8080/server-status
+ExecStart=/usr/bin/nginx-prometheus-exporter -nginx.scrape-uri=http://127.0.0.1:8080/server-status
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 

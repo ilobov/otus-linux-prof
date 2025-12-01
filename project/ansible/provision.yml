@@ -40,3 +40,15 @@
   roles:
     - db_backup_role
 
+- name: setup node_exporter
+  hosts: all
+  become: yes
+  roles:
+    - node_exp_role
+
+- name: setup mon
+  hosts: mon
+  become: yes
+  roles:
+    - mon_role
+
