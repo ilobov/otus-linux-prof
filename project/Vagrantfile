@@ -15,7 +15,6 @@ MACHINES = {
         :vm_name => "back1",
         :net => [
                    { adapter: 2, ip: '10.0.0.2', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
-                   { ip: '192.168.57.11', adapter: 8 },
                 ]
   },
   :back2 => {
@@ -44,7 +43,6 @@ MACHINES = {
         :vm_name => "mon",
         :net => [
                    { adapter: 2, ip: '10.0.0.6', netmask: "255.255.255.0", virtualbox__intnet: "int-net"},
-                   { ip: '192.168.57.13', adapter: 8 },
             ]
   },
 }

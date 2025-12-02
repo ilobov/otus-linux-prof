@@ -1,5 +1,18 @@
+- name: All
+  hosts: all
+  become: true
+  tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: "0644"
+
 - name: setup repl
   hosts: db
   become: yes
   roles:
     - db_role
+    - node_exp_role

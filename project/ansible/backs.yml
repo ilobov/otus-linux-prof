@@ -1,5 +1,17 @@
+- name: All
+  hosts: all
+  become: true
+  tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: "0644"
+
 - name: setup back
-  hosts: back1
+  hosts: back1, back2
   become: yes
   roles:
     - back_role

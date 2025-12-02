@@ -11,8 +11,9 @@
       mode: "0644"
 
 - name: setup repl
-  hosts: front
+  hosts: repl
   become: yes
   roles:
-    - front_role
+    - repl_role
+    - db_backup_role
     - node_exp_role

@@ -61,6 +61,16 @@
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
 
+- name: Get file facts for /vagrant/backups/backup_all.sql
+  ansible.builtin.stat:
+    path: /vagrant/backups/backup_all.sql
+  register: backup_file_status
+
+- name: Restore backup
+  shell: |
+    mysql < /vagrant/backups/backup_all.sql
+  when: backup_file_status.stat.exists    
+
 - name: Dump master database
   community.mysql.mysql_db:
     state: dump
