@@ -1,0 +1,16 @@
+- name: Create mysql dump on master
+  hosts: db
+  become: true
+  tasks:
+  - name: Dump master database
+    community.mysql.mysql_db:
+      state: dump
+      name: all
+      target: "/tmp/all_dump.sql"
+      login_unix_socket: /run/mysqld/mysqld.sock
+
+  - name: Copy database dump from master
+    ansible.builtin.fetch:
+      src: "/tmp/all_dump.sql"
+      dest: "/tmp/{{ inventory_hostname }}/"
+      flat: yes    
