@@ -1,0 +1,29 @@
+- name: All
+  hosts: db
+  become: true
+  tasks:
+  - name: copy resolv.conf
+    template: 
+      src: resolv.conf
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: "0644"
+
+- name: Create mysql dump on master
+  hosts: repl
+  become: true
+  tasks:
+  - name: Dump master database
+    community.mysql.mysql_db:
+      state: dump
+      name: all
+      target: "/vagrant/backups/backup_all.sql"
+      login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: setup repl
+  hosts: db
+  become: yes
+  roles:
+    - db_role
+    - node_exp_role
