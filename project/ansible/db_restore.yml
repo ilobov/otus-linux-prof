@@ -10,18 +10,18 @@
       group: root
       mode: "0644"
 
-- name: Create mysql dump on master
+- name: Create mysql dump on replica
   hosts: repl
   become: true
   tasks:
-  - name: Dump master database
+  - name: Dump replica database
     community.mysql.mysql_db:
       state: dump
       name: all
       target: "/vagrant/backups/backup_all.sql"
       login_unix_socket: /run/mysqld/mysqld.sock
 
-- name: setup repl
+- name: setup db
   hosts: db
   become: yes
   roles:
