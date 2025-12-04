@@ -61,9 +61,14 @@
     dest: /var/www/html/joomla/configuration.php
 
 - name: Copy Otus-project.png into joomla
-  template:
+  copy:
     src: templates/Otus-project.png
     dest: /var/www/html/joomla/images/Otus-project.png
+
+- name: Copy Otus-Func.png into joomla
+  copy:
+    src: templates/Otus-Func.png
+    dest: /var/www/html/joomla/images/Otus-Func.png
 
 - name: Delete a directory
   ansible.builtin.file:

@@ -38,7 +38,7 @@
   ansible.builtin.copy:
     src: /tmp/db/all_dump.sql
     dest: /tmp/all_dump.sql
-  when: replica_status.Replica_IO_Running is not defined or replica_status.Replica_IO_Running == "No"
+  when: replica_status.Replica_SQL_Running is not defined or replica_status.Replica_SQL_Running == "No"
 
 - name: Import database dump
   community.mysql.mysql_db:
@@ -46,7 +46,7 @@
     name: all
     target: "/tmp/all_dump.sql"
     login_unix_socket: /run/mysqld/mysqld.sock
-  when: replica_status.Replica_IO_Running is not defined or replica_status.Replica_IO_Running == "No"
+  when: replica_status.Replica_SQL_Running is not defined or replica_status.Replica_SQL_Running == "No"
 
 - name: Configure slave for replication
   community.mysql.mysql_query:
@@ -58,13 +58,13 @@
       MASTER_PASSWORD='ReplPassword123',
       MASTER_AUTO_POSITION = 1;
     login_unix_socket: /run/mysqld/mysqld.sock
-  when: replica_status.Replica_IO_Running is not defined or replica_status.Replica_IO_Running == "No"
+  when: replica_status.Replica_SQL_Running is not defined or replica_status.Replica_SQL_Running == "No"
 
 - name: Start slave
   community.mysql.mysql_query:
     query: START SLAVE;
     login_unix_socket: /run/mysqld/mysqld.sock
-  when: replica_status.Replica_IO_Running is not defined or replica_status.Replica_IO_Running == "No"
+  when: replica_status.Replica_SQL_Running is not defined or replica_status.Replica_SQL_Running == "No"
 
 - name: Create folder /etc/promtail
   ansible.builtin.file:
